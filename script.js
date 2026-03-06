@@ -1,0 +1,152 @@
+window.onload = () => {
+    let myCanvas = document.getElementById("my-canvas");
+    //
+    myCanvas.width = 600;
+    myCanvas.height = 600;
+    //
+    if (myCanvas.getContext) {
+        let ctx = myCanvas.getContext('2d');
+        update(ctx);
+    } else {
+        alert("Canvas is not supported.");
+    }
+}
+
+function update(ctx) {
+    //
+    let cw = ctx.canvas.width;
+    let ch = ctx.canvas.height;
+    /////////////
+    let x = cw / 2;
+    let y = ch / 2;
+    let r = Math.min(x, y) * 0.8;
+    //
+    ctx.clearRect(0, 0, cw, ch);
+    drawCircle(ctx, x, y, r, false)
+    //
+    drawMarks(ctx, x, y, r);
+    //
+    drawNumbers(ctx, x, y, r * 0.85)
+    //
+    drawHands(ctx, x, y, r)
+    //
+    drawCircle(ctx, x, y, 5, true)  // Crtanje centralnog kruga
+    //
+    requestAnimationFrame(() => {
+        update(ctx);
+    });
+}
+
+function drawHands(ctx, x, y, r) {
+    let now = new Date();
+    let seconds = now.getSeconds();
+    let minutes = now.getMinutes();
+    let hours = now.getHours();
+    //
+    hours = hours % 12
+    //
+    // Računanje uglova za kazaljke
+    const secondAngle = seconds * Math.PI / 30;
+    const minuteAngle = (minutes / 30 + seconds / 1800) * Math.PI;
+    const hourAngle = (hours / 6 + minutes / 360) * Math.PI;
+    //
+    drawHand(ctx, x, y, secondAngle, r, '#B22222');
+    drawHand(ctx, x, y, minuteAngle, r * 0.8, '#007BFF');
+    drawHand(ctx, x, y, hourAngle, r * 0.6);
+}
+
+function drawCircle(ctx, x, y, r, isFilled) {
+    ctx.lineWidth = 2
+    ctx.save();
+    //
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, 2 * Math.PI); // x, y, radius, startAngle, endAngle
+    if (isFilled) {
+        ctx.fill()
+    }
+    else {
+        ctx.stroke();
+    }
+    ctx.closePath();
+    //
+    ctx.restore();
+}
+
+function drawHand(ctx, x, y, angle, length, color) {
+    ctx.save();
+
+    ctx.lineCap = "round";
+    ctx.fillStyle = color || '#000'
+
+    ctx.translate(x, y);    // premesti centar na (x, y)
+    ctx.rotate(angle) // rotiraj canvas
+    // ne vracaj centar na (0,0)
+
+    /* ctx.beginPath();
+     ctx.moveTo(0, 0);   // počni od novog centra (0,0)
+     ctx.lineTo(0, -length); // crtaj liniju prema gore, dužine "length"
+     ctx.closePath();
+     ctx.stroke();*/
+    //
+    drawTriangle(ctx, length, 5)
+    ctx.fill();
+    //
+    ctx.restore();
+}
+
+//  oznake na 60 pozicija (za minute) i na 12 pozicija (za sate).
+function drawMarks(ctx, x, y, r) {
+    //
+    ctx.save()  //
+    ctx.translate(x, y) // premesti centar na (x, y)
+    //
+    for (let i = 0; i < 60; i++) {  // u svakoj iteraciji, crtaj liniju na obodu kruga
+        //
+        ctx.save()  //
+        //
+        let angle = i * (Math.PI / 30)  // svaki minut je 6 stepeni (360 / 60)
+        ctx.rotate(angle)   // rotiraj za i * (Math.PI / 30)
+        //
+        if (i % 5 === 0) {  // crtaj deblje linije na svakih 5 minuta za sate
+            drawLine(ctx, r, 10, 2)   // malo duža linija, od r do r - 10px
+        } else { // inače tanje za minute
+            drawLine(ctx, r, 5, 1)    // kratka linija, od r do r - 5px, izgleda kao oznaka
+        }
+        ctx.restore()   //
+    }
+    ctx.restore()   //
+}
+
+function drawLine(ctx, r, length, width) {
+    ctx.lineWidth = width
+
+    ctx.beginPath();
+    ctx.moveTo(0, -r);
+    ctx.lineTo(0, -r + length);
+    ctx.stroke();
+    ctx.closePath();
+}
+
+function drawTriangle(ctx, length, width) {
+    ctx.beginPath();
+    ctx.moveTo(0, width); // Počinje od tačke 3px ispod centra
+    ctx.lineTo(0, -length); // Vrh trougla
+    ctx.lineTo(-width, width); // Druga tačka na bazi
+    ctx.closePath();
+}
+
+function drawNumbers(ctx, x, y, r) {
+    ctx.font = '20px Open Sans';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    for (let i = 1; i <= 12; i++) {
+        // svaka pozicija je na 30 stepeni (360 / 12) od prethodne
+        // -90 da bi 12 bio na vrhu
+        let angle = (i * 30 - 90) * Math.PI / 180
+
+        let x1 = x + r * Math.cos(angle)
+        let y1 = y + r * Math.sin(angle)
+        ctx.fillText(i, x1, y1)
+    }
+}

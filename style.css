@@ -1,0 +1,12 @@
+  body {
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+  }
+
+  #my-canvas {
+      border: #cacaca 1px solid;
+      background-color: #f0f0f0;
+  }
